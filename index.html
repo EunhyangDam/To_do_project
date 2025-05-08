@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="./script/lib/vue.global.js"></script>
+    <script defer src="./script/index.js"></script>
+    <script
+      src="https://kit.fontawesome.com/0a4e914825.js"
+      crossorigin="anonymous"
+    ></script>
+    <meta
+      property="og:url"
+      content="http://eunhyanglee.dothome.co.kr/todoList/"
+    />
+    <meta property="og:title" content="이은지 투두리스트" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./img/thumnail.jpg" />
+    <meta property="og:description" content="VUE 프로젝트" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <title>VUE To-Do List</title>
+  </head>
+
+  <body>
+    <div id="root">
+      <div class="container">
+        <header id="header">
+          <h1>TO-DO List</h1>
+        </header>
+        <main id="main">
+          <section id="section1">
+            <div class="container">
+              <input
+                type="text"
+                name="inputNewTask"
+                id="inputNewTask"
+                placeholder="add your tasks"
+                v-model="state.newTask"
+                ref="refNewTask"
+                @keyUp.enter="condition($event)"
+              />
+              <div class="local-container">
+                <input
+                  type="datetime-local"
+                  name="inputNewExpire"
+                  id="inputNewExpire"
+                  v-model="state.newExpire"
+                  ref="refNewExpire"
+                  @keyUp.enter="clickButton($event)"
+                />
+              </div>
+              <button type="submit" @click.prevent="clickButton($event)">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </section>
+          <section id="section2">
+            <div class="container">
+              <ul>
+                <template
+                  v-for="el, idx in state.taskList"
+                  :key="el.id"
+                  :data-key="el.id"
+                >
+                  <li
+                    v-if="el.done===false && (idx >=state.listStart && idx < state.listEnd)"
+                  >
+                    <div class="input-container">
+                      <input
+                        type="checkbox"
+                        name="complete"
+                        :id="`complete${el.id}`"
+                        class="chkbox"
+                        @change="changechk(el.id, $event)"
+                        v-model="el.done"
+                      />
+                    </div>
+                    <a href="#" class="task" @click="clickEdit(el)">
+                      {{el.task}}
+                    </a>
+                    <a href="#" class="expire">{{el.expire}}</a>
+                    <div class="button-container">
+                      <button
+                        :class="['cancel',{active:el.id===state.id ? state.editState : false}]"
+                        @click="clickEditCancel()"
+                      >
+                        <i class="fa-solid fa-rotate-right"></i>
+                      </button>
+                      <button
+                        :class="['del',{active:el.id===state.id ? state.editState : false}]"
+                        @click="ClickDel(el.id, $event)"
+                      >
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+              <p
+                v-if="state.taskList.filter((item) => item.done === true).length > 0"
+              >
+                <span>complete</span>
+              </p>
+              <ul>
+                <template
+                  v-for="el in state.taskList"
+                  :key="el.id"
+                  :data-key="el.id"
+                >
+                  <li v-if="el.done===true" class="done">
+                    <div class="input-container">
+                      <input
+                        type="checkbox"
+                        name="complete"
+                        :id="`complete${el.id}`"
+                        class="chkbox"
+                        @change="changechk(el.id, $event)"
+                        v-model="el.done"
+                      />
+                    </div>
+                    <a href="#" class="task">{{el.task}}</a>
+                    <a href="#" class="expire" @click="clickChangeExpire(el.id)"
+                      >{{el.expire}}</a
+                    >
+                    <div class="button-container">
+                      <button class="cancel">
+                        <i class="fa-solid fa-rotate-right"></i>
+                      </button>
+                      <button class="del" @click="ClickDel(el.id, $event)">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+              <div class="page-container">
+                <ul>
+                  <li>
+                    <button @click.prevent="clickStart()">
+                      <i class="fa-solid fa-angles-left"></i>
+                    </button>
+                  </li>
+                  <li>
+                    <button @click.prevent="clickPrev()">
+                      <i class="fa-solid fa-angle-left"></i>
+                    </button>
+                  </li>
+                  <template v-for="num, idx in state.pages">
+                    <li
+                      :class="['pageLi',{active:num===page?true:false}]"
+                      v-if="idx>=state.btnStart && idx<state.btnEnd"
+                    >
+                      <a href="#" :title="num" @click.prevent="clickPage(num)">
+                        {{num}}
+                      </a>
+                    </li>
+                  </template>
+                  <li>
+                    <button @click.prevent="clickNext()">
+                      <i class="fa-solid fa-angle-right"></i>
+                    </button>
+                  </li>
+                  <li>
+                    <button @click.prevent="clickEnd()">
+                      <i class="fa-solid fa-angles-right"></i>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </main>
+        <footer id="footer">
+          <p>2025. copyright @Eunhyang_Lee All Right Reserved.</p>
+        </footer>
+      </div>
+      <div :class="['confirm-modal',{'on':state.isConfirmModal}]">
+        <div class="cfmodal-container">
+          <div class="content">
+            <div class="text-container">
+              <h1>삭제하시겠습니까?</h1>
+            </div>
+            <div class="button-container">
+              <button @click.prevent="clickDelYes()">Yes</button>
+              <button @click.prevent="clickDelNo()">No</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
